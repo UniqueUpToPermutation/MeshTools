@@ -225,6 +225,16 @@ namespace GeometryModes
                 }
             }
 
+            public bool IsOnBoundary
+            {
+                get { return parent.edges[id].Face == -1; }
+            }
+
+            public bool IsInInterior
+            {
+                get { return parent.edges[id].Face != -1; }
+            }
+
             public static Face None
             {
                 get { return new Face(null, -1); }
@@ -424,7 +434,23 @@ namespace GeometryModes
             {
                 get
                 {
-                    return from e in OutgoingEdges select e.Face;
+                    return from e in OutgoingEdges where e.Face.id != -1 select e.Face;
+                }
+            }
+
+            public bool IsOnBoundary
+            {
+                get
+                {
+                    return OutgoingEdges.Any(e => e.Face.id == -1);
+                }
+            }
+
+            public bool IsInInterior
+            {
+                get
+                {
+                    return !IsOnBoundary;
                 }
             }
 
@@ -458,7 +484,7 @@ namespace GeometryModes
             public List<RawFace> faces = new List<RawFace>();
             public List<RawVertex> vertices = new List<RawVertex>();
             protected BoundingBox aabb = new BoundingBox();
-            protected bool bHasBoundary = false;
+            protected int boundaryVertexCount = 0;
 
             public bool HasVertices { get; protected set; } = false;
             public bool HasUVs { get; protected set; } = false;
@@ -513,6 +539,11 @@ namespace GeometryModes
                 }
             }
 
+            public bool HasBoundary
+            {
+                get { return boundaryVertexCount > 0; }
+            }
+
             public int EdgeCount
             {
                 get { return edges.Count; }
@@ -526,6 +557,11 @@ namespace GeometryModes
             public int FaceCount
             {
                 get { return faces.Count; }
+            }
+
+            public int BoundaryVertexCount
+            {
+                get { return boundaryVertexCount; }
             }
 
             public Edge CreateEdge()
@@ -587,12 +623,10 @@ namespace GeometryModes
 
             public void UpdateHasBoundary()
             {
-                bHasBoundary = false;
+                boundaryVertexCount = 0;
                 foreach (var e in edges)
-                {
                     if (e.Face == -1)
-                        bHasBoundary = true;
-                }
+                        boundaryVertexCount++;
             }
 
             public float[] CreateIndexedVertexData(int stride,
@@ -1246,7 +1280,6 @@ namespace GeometryModes
 
                     dummyEdges.Push(newEdge);
                 }
-
 
                 Console.WriteLine("Linking dummy edges...");
                 // Link the dummy edges up correctly (note a vertex cannot be adjacent to multiple holes!)

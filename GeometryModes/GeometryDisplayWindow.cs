@@ -74,7 +74,7 @@ namespace GeometryModes
         public Vec ObjectEigenvalues { get; set; }
 
         public GeometryDisplayWindow(Geometry.Geometry geometry) : 
-            base(800, 600, new GraphicsMode(32, 24, 8, 8), "Result Viewer")
+            base(800, 600, new GraphicsMode(32, 24, 8, 8), "Geometry Viewer")
         {
             this.geometry = geometry;
 

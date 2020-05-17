@@ -35,6 +35,11 @@ namespace GeometryModes
                 get { return geometry.VertexCount; }
             }
 
+            public int InteriorVertexDimension
+            {
+                get { return geometry.VertexCount - geometry.BoundaryVertexCount; }
+            }
+
             public Mat PositionMatrix
             {
                 get
@@ -88,14 +93,22 @@ namespace GeometryModes
                     foreach (var e in v.OutgoingEdges)
                     {
                         // Calculate cot(alpha)
-                        var v1 = e.Next.Direction;
-                        var v2 = -e.Next.Next.Direction;
-                        var cotAlpha = OpenTK.Vector3.Dot(v1, v2) / Math.Abs(OpenTK.Vector3.Cross(v1, v2).Length);
+                        var cotAlpha = 0.0d;
+                        if (e.Face.id != -1)
+                        {
+                            var v1 = e.Next.Direction;
+                            var v2 = -e.Next.Next.Direction;
+                            cotAlpha = OpenTK.Vector3.Dot(v1, v2) / Math.Abs(OpenTK.Vector3.Cross(v1, v2).Length);
+                        }
 
                         // Calculate cot(beta)
-                        v1 = e.Opposite.Next.Direction;
-                        v2 = -e.Opposite.Next.Next.Direction;
-                        var cotBeta = OpenTK.Vector3.Dot(v1, v2) / Math.Abs(OpenTK.Vector3.Cross(v1, v2).Length);
+                        var cotBeta = 0.0d;
+                        if (e.Opposite.Face.id != -1)
+                        {
+                            var v1 = e.Opposite.Next.Direction;
+                            var v2 = -e.Opposite.Next.Next.Direction;
+                            cotBeta = OpenTK.Vector3.Dot(v1, v2) / Math.Abs(OpenTK.Vector3.Cross(v1, v2).Length);
+                        }
 
                         var weight = (cotAlpha + cotAlpha) / 2.0d;
                         totalWeight += weight;
@@ -190,12 +203,34 @@ namespace GeometryModes
                 }
             }
 
+            public Mat InteriorLaplacian
+            {
+                get
+                {
+                    if (geometry.HasBoundary)
+                        return ClosureToInteriorMap * Laplacian * ClosureToInteriorMap;
+                    else
+                        return Laplacian;
+                }
+            }
+
             public Mat SymmetrizedLaplacian
             {
                 get
                 {
                     var halfInvMass = HalfInverseMassMatrix;
                     return halfInvMass * WeakLaplacian * halfInvMass;
+                }
+            }
+
+            public Mat InteriorSymmetrizedLaplacian
+            {
+                get
+                {
+                    if (geometry.HasBoundary)
+                        return ClosureToInteriorMap * SymmetrizedLaplacian * ClosureToInteriorMap;
+                    else;
+                    return SymmetrizedLaplacian;
                 }
             }
 
@@ -211,7 +246,7 @@ namespace GeometryModes
 
             public static void WriteSparseMatrix(Mat mat, string filename)
             {
-                var sp = (mat as Linalg.Double.SparseMatrix);
+                var sp = mat as Linalg.Double.SparseMatrix;
 
                 if (sp != null)
                 {
@@ -237,6 +272,38 @@ namespace GeometryModes
 
                     var arr = new Numpy.NDarray[] { npDim, npLoc, npVal };
                     np.savez(filename, arr);
+                }
+            }
+
+            public IEnumerable<Tuple<int, int, double>> EnumClosureToInteriorMap()
+            {
+                int interior_id = 0;
+                for (int i = 0; i < geometry.vertices.Count; ++i)
+                {
+                    if (geometry.GetVertex(i).IsInInterior)
+                    {
+                        yield return new Tuple<int, int, double>(interior_id, i, 1.0d);
+                        ++interior_id;
+                    }
+                }
+            }
+
+            public Mat ClosureToInteriorMap
+            {
+                get
+                {
+                    if (geometry.HasBoundary)
+                        return Mat.Build.SparseOfIndexed(InteriorVertexDimension, VertexDimension, EnumClosureToInteriorMap());
+                    else
+                        return Mat.Build.SparseIdentity(VertexDimension);
+                }
+            }
+
+            public Mat InteriorToClosureMap
+            {
+                get
+                {
+                    return ClosureToInteriorMap.Transpose();
                 }
             }
 

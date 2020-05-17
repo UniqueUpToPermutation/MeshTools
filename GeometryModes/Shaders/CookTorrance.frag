@@ -52,7 +52,7 @@ vec3 CookTorrance(vec3 materialDiffuseColor,
 		float g2 = (two_NdotH * NdotL) / VdotH;
 		float G = min(1.0, min(g1, g2));
 
-		Rs = (F * D * G) / (PI * NdotL * NdotV);
+		Rs = (F * D * G) / max(PI * NdotL * NdotV, 0.000001);
 	}
 	
 	return materialDiffuseColor * lightColor * NdotL + lightColor * materialSpecularColor * NdotL * (k + Rs * (1.0 - k));
