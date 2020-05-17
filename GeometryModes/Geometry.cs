@@ -99,6 +99,14 @@ namespace GeometryModes
                 set { parent.edges[id] = value; }
             }
 
+            public OpenTK.Vector3 Direction
+            {
+                get
+                {
+                    return Head.Position - Tail.Position;
+                }
+            }
+
             public static bool operator ==(Edge e1, Edge e2)
             {
                 return e1.id == e2.id;
@@ -389,7 +397,7 @@ namespace GeometryModes
                     for (Edge start = Edge, current = start; ;)
                     {
                         yield return current;
-                        current = current.Next;
+                        current = current.Opposite.Next;
                         if (current == start)
                             break;
                     }
@@ -1156,7 +1164,7 @@ namespace GeometryModes
 
                 int iterationCount = 0;
                 int total = vertexVertexToEdgeMap.Count;
-                int messagePushFreq = total / 10;
+                int messagePushFreq = Math.Max(total / 10, 1);
                 // Link up opposite edges
                 for (int edgeId = 0; edgeId < geo.edges.Count; ++edgeId)
                 {
@@ -1269,6 +1277,29 @@ namespace GeometryModes
                 }
             }
 
+            public static ColorScheme BlueRed
+            {
+                get
+                {
+                    return new ColorScheme()
+                    {
+                        positiveColors =
+                        new List<Clr>()
+                        {
+                            Clr.White,
+                            Clr.DarkRed
+                        },
+                        negativeColors =
+                        new List<Clr>()
+                        {
+                            Clr.White,
+                            Clr.DarkBlue
+                        },
+                        bUseNegatives = true
+                    };
+                }
+            }
+
             public Clr GetColor(double value, double smallest, double largest)
             {
                 if (largest - smallest < float.Epsilon)
@@ -1307,7 +1338,5 @@ namespace GeometryModes
                 return c;
             }
         }
-
-       
     }
 }

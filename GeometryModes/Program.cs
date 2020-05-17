@@ -15,6 +15,8 @@ using OpenTK.Input;
 using Mat = MathNet.Numerics.LinearAlgebra.Matrix<double>;
 using Vec = MathNet.Numerics.LinearAlgebra.Vector<double>;
 
+using GeometryModes.Geometry;
+
 namespace GeometryModes
 {
     class Program
@@ -55,15 +57,27 @@ namespace GeometryModes
                 importer.Dispose();
             }
 
-            var indx = Array.FindIndex(args, t => t == "-lapout");
+            bool bUseSymmetricLaplacian = false;
+            var indx = Array.FindIndex(args, t => t == "-sym");
+            if (indx != -1)
+            {
+                Console.WriteLine("Using symmetric laplacian...");
+                bUseSymmetricLaplacian = true;
+            }
+
+            indx = Array.FindIndex(args, t => t == "-lapout");
             if (indx != -1)
             {
                 Console.WriteLine("Creating differential structure...");
-                var diff = new Geometry.DifferentialStructure(geo);
+                var diff = new DifferentialStructure(geo);
 
                 Console.WriteLine("Writing mesh laplacian to file...");
                 var outputFile = args[indx + 1];
-                Geometry.DifferentialStructure.WriteSparseMatrix(diff.LaplacianMatrix, outputFile);
+
+                if (bUseSymmetricLaplacian)
+                    DifferentialStructure.WriteSparseMatrix(diff.SymmetrizedLaplacian, outputFile);
+                else
+                    DifferentialStructure.WriteSparseMatrix(diff.Laplacian, outputFile);
             }
 
             indx = Array.FindIndex(args, t => t == "-modesin");
@@ -74,9 +88,24 @@ namespace GeometryModes
             {
                 Console.WriteLine("Reading mode data...");
                 var inputFile = args[indx + 1];
-                Geometry.DifferentialStructure.ReadModeData(inputFile, out modes, out spec);
+                DifferentialStructure.ReadModeData(inputFile, out modes, out spec);
+
+                if (bUseSymmetricLaplacian)
+                {
+                    var diff = new DifferentialStructure(geo);
+                    modes = diff.HalfInverseMassMatrix * modes;
+                }
+
                 visMode = GeometryVisualMode.ViewModes;
             }
+
+            indx = Array.FindIndex(args, t => t == "-viewmass");
+            if (indx != -1)
+                visMode = GeometryVisualMode.ViewDegreeVector;
+
+            indx = Array.FindIndex(args, t => t == "-viewlapdiag");
+            if (indx != -1)
+                visMode = GeometryVisualMode.ViewLapDiagonal;
 
             indx = Array.FindIndex(args, t => t == "-meshout");
             if (indx != -1)

@@ -4,10 +4,8 @@
 
 in vec2 vTexcoords;
 in vec3 vNormal;
-in vec3 vViewDir;
-in vec3 vLightDir;
-in float vLightDistance2;
 in vec3 vVertexColor;
+in vec3 vPosition;
 
 uniform vec3 specularColor = vec3(1, 1, 1);
 uniform float F0 = 0.8;
@@ -16,6 +14,8 @@ uniform float k = 0.2;
 uniform vec3 lightColor = vec3(1, 1, 1);
 uniform float ambientStrength = 0.0;
 uniform float lightIntensity = 1.0;
+uniform vec3 eyePosition;
+uniform vec3 lightPosition;
 
 out vec3 outColor;
 
@@ -61,6 +61,9 @@ vec3 CookTorrance(vec3 materialDiffuseColor,
 void main()
 {
 	vec3 diffuseColor = vVertexColor;
+
+	vec3 vViewDir = normalize(eyePosition - vPosition);
+	vec3 vLightDir = normalize(lightPosition - vPosition);
 
 	outColor = CookTorrance(diffuseColor,
 		specularColor,

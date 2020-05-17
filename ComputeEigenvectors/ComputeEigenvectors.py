@@ -22,15 +22,19 @@ row = loc[:, 0]
 col = loc[:, 1]
 
 mat = csc_matrix((val, (row, col)), shape=(row_count, col_count))
+mat = -mat;
 
 if len(sys.argv) < 4:
     mode_count = 20
 else:
     mode_count = int(sys.argv[3])
-
+    
 # solve this bitch
 print("Computing Eigenvectors...")
-(val, modes) = scipy.sparse.linalg.eigs(mat, k=mode_count, sigma=0.0)
+if ("-sym" in sys.argv):
+    (val, modes) = scipy.sparse.linalg.eigsh(mat, k=mode_count, sigma=-0.0001)
+else:
+    (val, modes) = scipy.sparse.linalg.eigs(mat, k=mode_count, sigma=-0.0001)
 val = np.real(val)
 modes = np.real(modes)
 
@@ -41,6 +45,9 @@ else:
 
 # First row is the eigenvalues!
 merge = np.concatenate((val.reshape(1, mode_count), modes), axis=0)
+
+print("Eigenvalues:")
+print(val)
 
 # save result
 np.save(output_loc, merge)

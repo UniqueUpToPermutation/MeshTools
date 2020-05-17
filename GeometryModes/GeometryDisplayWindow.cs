@@ -15,23 +15,36 @@ using OpenTK.Input;
 using Mat = MathNet.Numerics.LinearAlgebra.Matrix<double>;
 using Vec = MathNet.Numerics.LinearAlgebra.Vector<double>;
 
+using GeometryModes.Geometry;
+
 namespace GeometryModes
 {
     enum GeometryVisualMode
     {
-        ViewMesh,
-        ViewModes
+        ViewMesh = 0,
+        ViewModes = 1,
+        ViewDegreeVector = 2,
+        ViewLapDiagonal = 3
     }
 
     enum GeometryShader
     {
         BlinnPhong,
         CookTorrance,
-        SimpleColor
+        SimpleColor,
+        Override
     }
 
     class GeometryDisplayWindow : GameWindow
     {
+        static readonly GeometryShader[] VisualModeShaders = new GeometryShader[]
+        {
+            GeometryShader.Override,
+            GeometryShader.Override,
+            GeometryShader.SimpleColor,
+            GeometryShader.SimpleColor
+        };
+
         int triangleVertexBuffer = -1;
 
         Geometry.Geometry geometry;
@@ -76,7 +89,17 @@ namespace GeometryModes
         protected void UpdateVisualization()
         {
             if (visualMode == GeometryVisualMode.ViewModes)
-                geometry.VisualizeVertexFunction(ObjectModes.Column(currentMode), Geometry.ColorScheme.Default);
+                geometry.VisualizeVertexFunction(ObjectModes.Column(currentMode), ColorScheme.BlueRed);
+            else if (visualMode == GeometryVisualMode.ViewDegreeVector)
+            {
+                var diff = new DifferentialStructure(geometry);
+                geometry.VisualizeVertexFunction(diff.MassVector, ColorScheme.Default);
+            }
+            else if (visualMode == GeometryVisualMode.ViewLapDiagonal)
+            {
+                var diff = new DifferentialStructure(geometry);
+                geometry.VisualizeVertexFunction(diff.Laplacian.Diagonal(), ColorScheme.Default);
+            }
             else if (visualMode == GeometryVisualMode.ViewMesh)
             {
                 for (int i = 0; i < geometry.vertices.Count; ++i)
@@ -168,9 +191,9 @@ namespace GeometryModes
             var lightDirection = new Vector3(-1.0f, -1.0f, -1.0f);
             lightDirection.Normalize();
 
-            GeometryShader shaderToUse = DefaultShader;
-            if (VisualMode == GeometryVisualMode.ViewModes)
-                shaderToUse = GeometryShader.SimpleColor;
+            GeometryShader shaderToUse = VisualModeShaders[(int)visualMode];
+            if (shaderToUse == GeometryShader.Override)
+                shaderToUse = DefaultShader;
 
             switch (shaderToUse)
             {
@@ -182,8 +205,16 @@ namespace GeometryModes
                     cookShader.WorldInverseTranspose.Set(invWorldMat);
                     cookShader.LightPosition.Set(new Vector3(10.0f, 10.0f, 10.0f));
                     cookShader.EyePosition.Set(camera.Position);
-                    cookShader.AmbientStrength.Set(0.15f);
-                    cookShader.LightIntensity.Set(0.8f);
+                    if (visualMode == GeometryVisualMode.ViewModes)
+                    {
+                        cookShader.AmbientStrength.Set(0.5f);
+                        cookShader.LightIntensity.Set(0.5f);
+                    }
+                    else
+                    {
+                        cookShader.AmbientStrength.Set(0.15f);
+                        cookShader.LightIntensity.Set(0.8f);
+                    }
                     break;
 
                 case GeometryShader.BlinnPhong:

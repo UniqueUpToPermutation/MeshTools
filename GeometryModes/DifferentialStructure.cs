@@ -19,10 +19,6 @@ namespace GeometryModes
         public class DifferentialStructure
         {
             protected Geometry geometry;
-            protected Mat gradient;
-            protected Mat divergence;
-            protected Mat curl;
-            protected Mat laplacian;
 
             public int EdgeDimension
             {
@@ -84,81 +80,145 @@ namespace GeometryModes
                 }
             }
 
+            public IEnumerable<Tuple<int, int, double>> EnumWeakLaplacian()
+            {
+                foreach (var v in geometry.Vertices)
+                {
+                    var totalWeight = 0.0d;
+                    foreach (var e in v.OutgoingEdges)
+                    {
+                        // Calculate cot(alpha)
+                        var v1 = e.Next.Direction;
+                        var v2 = -e.Next.Next.Direction;
+                        var cotAlpha = OpenTK.Vector3.Dot(v1, v2) / Math.Abs(OpenTK.Vector3.Cross(v1, v2).Length);
+
+                        // Calculate cot(beta)
+                        v1 = e.Opposite.Next.Direction;
+                        v2 = -e.Opposite.Next.Next.Direction;
+                        var cotBeta = OpenTK.Vector3.Dot(v1, v2) / Math.Abs(OpenTK.Vector3.Cross(v1, v2).Length);
+
+                        var weight = (cotAlpha + cotAlpha) / 2.0d;
+                        totalWeight += weight;
+
+                        yield return new Tuple<int, int, double>(v.id, e.Head.id, weight);
+                    }
+                    yield return new Tuple<int, int, double>(v.id, v.id, -totalWeight);
+                }
+            }
+
+            public Mat DenseLaplacian
+            {
+                get
+                {
+                    return Mat.Build.DenseOfMatrix(Laplacian);
+                }
+            }
+
+            public Mat DenseWeakLaplacian
+            {
+                get
+                {
+                    return Mat.Build.DenseOfMatrix(WeakLaplacian);
+                }
+            }
+
+            public IEnumerable<Tuple<int, int, double>> EnumMassMatrix()
+            {
+                foreach (var v in geometry.Vertices)
+                {
+                    var totalArea = 0.0d;
+                    foreach (var f in v.AdjacentFaces)
+                        totalArea += f.TriangleArea;
+                    var mass = totalArea / 3.0d;
+                    yield return new Tuple<int, int, double>(v.id, v.id, mass);
+                }
+            }
+
             public DifferentialStructure(Geometry geometry)
             {
                 this.geometry = geometry;
-
-                var gradPos = from e in geometry.Edges
-                              select new Tuple<int, int, double>(e.id, e.Head.id,
-                                    1.0d / (2.0d * (e.Head.Data.Position - e.Tail.Data.Position).Length));
-                var gradNeg = from e in geometry.Edges
-                              select new Tuple<int, int, double>(e.id, e.Tail.id,
-                                    -1.0d / (2.0d * (e.Head.Data.Position - e.Tail.Data.Position).Length));
-                var gradEnum = Enumerable.Union(gradPos, gradNeg);
-
-                gradient = Mat.Build.SparseOfIndexed(EdgeDimension, VertexDimension, gradEnum);
-                
-                divergence = gradient.Transpose() * 2.0d;
-                laplacian = divergence * gradient;
-
-                var curlEnum = from f in geometry.Faces
-                               from e in f.Edges
-                               select new Tuple<int, int, double>(f.id, e.id,
-                               (2.0d * (e.Head.Data.Position - e.Tail.Data.Position).Length) / f.TriangleArea);
-
-                curl = Mat.Build.SparseOfIndexed(FaceDimension, EdgeDimension, curlEnum);
             }
 
-            public Vec Gradient(Vec vertexFunc)
+            public Mat WeakLaplacian
             {
-                return gradient * vertexFunc;
+                get
+                {
+                    return Mat.Build.SparseOfIndexed(VertexDimension, VertexDimension, EnumWeakLaplacian());
+                }
             }
 
-            public Mat GradientMatrix
+            public Mat MassMatrix
             {
-                get { return gradient; }
+                get
+                {
+                    return Mat.Build.SparseOfIndexed(VertexDimension, VertexDimension, EnumMassMatrix());
+                }
             }
 
-            public Vec Divergence(Vec edgeFunc)
+            public Mat InverseMassMatrix
             {
-                return divergence * edgeFunc;
+                get
+                {
+                    var invMass = EnumMassMatrix().Select(t => new Tuple<int, int, double>(t.Item1, t.Item2, 1.0d / t.Item3));
+                    return Mat.Build.SparseOfIndexed(VertexDimension, VertexDimension, invMass);
+                }
             }
 
-            public Mat DivergenceMatrix
+            public Mat HalfInverseMassMatrix
             {
-                get { return divergence; }
+                get
+                {
+                    var invMass = EnumMassMatrix().Select(t => new Tuple<int, int, double>(t.Item1, t.Item2, 1.0d / Math.Sqrt(t.Item3)));
+                    return Mat.Build.SparseOfIndexed(VertexDimension, VertexDimension, invMass);
+                }
             }
 
-            public Vec Laplacian(Vec vertexFunc)
+            public Mat HalfMassMatrix
             {
-                return laplacian * vertexFunc;
+                get
+                {
+                    var invMass = EnumMassMatrix().Select(t => new Tuple<int, int, double>(t.Item1, t.Item2, Math.Sqrt(t.Item3)));
+                    return Mat.Build.SparseOfIndexed(VertexDimension, VertexDimension, invMass);
+                }
             }
 
-            public Mat LaplacianMatrix
+            public Mat Laplacian
             {
-                get { return laplacian; }
+                get
+                {
+                    return InverseMassMatrix * WeakLaplacian;
+                }
             }
 
-            public Vec Curl(Vec edgeFunc)
+            public Mat SymmetrizedLaplacian
             {
-                return curl * edgeFunc;
+                get
+                {
+                    var halfInvMass = HalfInverseMassMatrix;
+                    return halfInvMass * WeakLaplacian * halfInvMass;
+                }
             }
 
-            public Mat CurlMatrix
+            public Vec MassVector
             {
-                get { return curl; }
+                get
+                {
+                    var masses = EnumMassMatrix();
+                    var massesTransformed = masses.Select(t => t.Item3).ToArray();
+                    return Vec.Build.Dense(massesTransformed);
+                }
             }
 
             public static void WriteSparseMatrix(Mat mat, string filename)
             {
-                var sp = (mat as MathNet.Numerics.LinearAlgebra.Double.SparseMatrix);
+                var sp = (mat as Linalg.Double.SparseMatrix);
 
                 if (sp != null)
                 {
                     var nnzCount = sp.NonZerosCount;
                     var enumer = sp.EnumerateIndexed(Linalg.Zeros.AllowSkip);
 
-                    var npDim = np.array<int>(mat.RowCount, mat.ColumnCount);
+                    var npDim = np.array(mat.RowCount, mat.ColumnCount);
 
                     var loc = new int[nnzCount, 2];
                     var val = new double[nnzCount];
@@ -207,9 +267,9 @@ namespace GeometryModes
 
                 var data = arrz.GetData<double>();
 
-                for (int i = 1; i < rows; ++i)
+                for (int i = 1; i <= rows; ++i)
                     for (int j = 0; j < cols; ++j)
-                        modes[i, j] = data[cols * i + j];
+                        modes[i - 1, j] = data[i * cols + j];
 
                 eigs = Vec.Build.Dense(cols);
 

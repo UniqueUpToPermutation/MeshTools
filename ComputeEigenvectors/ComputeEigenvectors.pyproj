@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda37-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>../GeometryModes/bin/Debug/output.npz ../GeometryModes/bin/Debug/result.npy 20</CommandLineArguments>
+    <CommandLineArguments>../GeometryModes/bin/Debug/lap.npz ../GeometryModes/bin/Debug/modes.npy 20 -nosym</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
