@@ -457,7 +457,8 @@ namespace GeometryModes
             public List<RawEdge> edges = new List<RawEdge>();
             public List<RawFace> faces = new List<RawFace>();
             public List<RawVertex> vertices = new List<RawVertex>();
-            public BoundingBox aabb = new BoundingBox();
+            protected BoundingBox aabb = new BoundingBox();
+            protected bool bHasBoundary = false;
 
             public bool HasVertices { get; protected set; } = false;
             public bool HasUVs { get; protected set; } = false;
@@ -582,6 +583,16 @@ namespace GeometryModes
 
                 aabb.Lower = lower;
                 aabb.Upper = upper;
+            }
+
+            public void UpdateHasBoundary()
+            {
+                bHasBoundary = false;
+                foreach (var e in edges)
+                {
+                    if (e.Face == -1)
+                        bHasBoundary = true;
+                }
             }
 
             public float[] CreateIndexedVertexData(int stride,
@@ -970,6 +981,7 @@ namespace GeometryModes
                 }
 
                 geo.UpdateBoundingBox();
+                geo.UpdateHasBoundary();
 
                 return geo;
             }
@@ -1100,6 +1112,35 @@ namespace GeometryModes
                         for (int i = 0; i < groupMap.Length; ++i)
                             newGroupMap[i] = renameMap[groupMapOrdered[i]];
 
+                        // Merge normals and tangents
+                        if (geo.HasNormals || geo.HasTangents)
+                        {
+                            // Zero data
+                            for (int i = 0; i < newVertexSet.Count; ++i)
+                            {
+                                var data = newVertexSet[i];
+                                data.Normal = OpenTK.Vector3.Zero;
+                                data.Tangent = OpenTK.Vector3.Zero;
+                                newVertexSet[i] = data;
+                            }
+                            // Add normals from old vertices to new vertices
+                            for (int i = 0; i < newGroupMap.Length; ++i)
+                            {
+                                var data = newVertexSet[newGroupMap[i]];
+                                data.Normal += geo.vertices[i].Normal;
+                                data.Tangent += geo.vertices[i].Tangent;
+                                newVertexSet[newGroupMap[i]] = data;
+                            }
+                            // Normalize result
+                            for (int i = 0; i < newVertexSet.Count; ++i)
+                            {
+                                var data = newVertexSet[i];
+                                data.Normal.Normalize();
+                                data.Tangent.Normalize();
+                                newVertexSet[i] = data;
+                            }
+                        }
+
                         geo.vertices = newVertexSet;
                         groupMap = newGroupMap;
                     }
@@ -1161,10 +1202,7 @@ namespace GeometryModes
                 }
 
                 var unmatchedEdges = new Stack<Tuple<int, int, int>>();
-
-                int iterationCount = 0;
-                int total = vertexVertexToEdgeMap.Count;
-                int messagePushFreq = Math.Max(total / 10, 1);
+                Console.WriteLine("Performing opposte edge link...");
                 // Link up opposite edges
                 for (int edgeId = 0; edgeId < geo.edges.Count; ++edgeId)
                 {
@@ -1184,9 +1222,6 @@ namespace GeometryModes
                         edge2.Opposite = edge1;
 
                         edgeLinkedFlags[edge2.id] = true;
-
-                        // vertexVertexToEdgeMap.Remove(oppositeKey);
-                        ++iterationCount;
                     }
                     else
                     {
@@ -1195,19 +1230,10 @@ namespace GeometryModes
                             firstEdgePair.Key.Item2,
                             firstEdgePair.Value));
                     }
-                    // vertexVertexToEdgeMap.Remove(firstEdgePair.Key);
-
-                    if (iterationCount % messagePushFreq == 0)
-                        Console.WriteLine($"Performing opposite edge link... {(float)iterationCount / (float)total * 100f:0.} %");
-                    ++iterationCount;
-                    if (iterationCount % messagePushFreq == 0)
-                        Console.WriteLine($"Performing opposite edge link... {(float)iterationCount / (float)total * 100f:0.} %");
                 }
 
                 var dummyEdges = new Stack<Edge>();
-
                 Console.WriteLine("Creating dummy edges for holes...");
-
                 // Create dummy opposite edges for unmatched edges
                 while (unmatchedEdges.Count > 0)
                 {
@@ -1237,6 +1263,9 @@ namespace GeometryModes
                     current = current.Opposite;
                     current.Next = edge;
                 }
+
+                // Check if mesh has a boundary
+                geo.UpdateHasBoundary();
 
                 return geo;
             }
