@@ -1194,6 +1194,13 @@ namespace GeometryModes
                 Console.WriteLine("Performing initial link...");
                 foreach (var f in meshFaces)
                 {
+                    // Skip anything that does not have 3 vertices
+                    if (f.IndexCount != 3)
+                    {
+                        Console.WriteLine("Warning! Non triangle faces detected! Skipping...");
+                        continue;
+                    }
+
                     var currentFace = geo.CreateFace();
 
                     Edge lastEdge = Edge.None;

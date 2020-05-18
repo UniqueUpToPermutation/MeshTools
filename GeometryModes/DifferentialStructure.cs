@@ -208,7 +208,7 @@ namespace GeometryModes
                 get
                 {
                     if (geometry.HasBoundary)
-                        return ClosureToInteriorMap * Laplacian * ClosureToInteriorMap;
+                        return ClosureToInteriorMap * Laplacian * InteriorToClosureMap;
                     else
                         return Laplacian;
                 }
@@ -228,9 +228,9 @@ namespace GeometryModes
                 get
                 {
                     if (geometry.HasBoundary)
-                        return ClosureToInteriorMap * SymmetrizedLaplacian * ClosureToInteriorMap;
-                    else;
-                    return SymmetrizedLaplacian;
+                        return ClosureToInteriorMap * SymmetrizedLaplacian * InteriorToClosureMap;
+                    else
+                        return SymmetrizedLaplacian;
                 }
             }
 

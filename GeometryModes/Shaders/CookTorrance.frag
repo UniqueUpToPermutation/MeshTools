@@ -33,7 +33,7 @@ vec3 CookTorrance(vec3 materialDiffuseColor,
 		vec3 H = normalize(lightDir + viewDir);
 		float NdotH = max(0, dot(normal, H));
 		float NdotV = max(0, dot(normal, viewDir));
-		float VdotH = max(0, dot(lightDir, H));
+		float VdotH = max(0.000001, dot(lightDir, H));
 
 		// Fresnel reflectance
 		float F = pow(1.0 - VdotH, 5.0);
@@ -42,8 +42,8 @@ vec3 CookTorrance(vec3 materialDiffuseColor,
 
 		// Microfacet distribution by Beckmann
 		float m_squared = roughness * roughness;
-		float r1 = 1.0 / (4.0 * m_squared * pow(NdotH, 4.0));
-		float r2 = (NdotH * NdotH - 1.0) / (m_squared * NdotH * NdotH);
+		float r1 = 1.0 / max(4.0 * m_squared * pow(NdotH, 4.0), 0.000001);
+		float r2 = (NdotH * NdotH - 1.0) / max(m_squared * NdotH * NdotH, 0.000001);
 		float D = r1 * exp(r2);
 
 		// Geometric shadowing

@@ -84,6 +84,12 @@ namespace GeometryModes
 
             controller = new CameraController(camera);
             controller.Attach(this);
+
+            var a = System.Reflection.Assembly.GetExecutingAssembly();
+            var st = a.GetManifestResourceStream("GeometryModes.Resources.Icon.ico");
+            var icnTask = new System.Drawing.Icon(st);
+
+            Icon = icnTask;
         }
 
         protected void UpdateVisualization()
@@ -168,7 +174,7 @@ namespace GeometryModes
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             GL.Enable(EnableCap.DepthTest);
-            GL.ClearColor(0.5f, 0.5f, 1.0f, 1.0f);
+            GL.ClearColor(0.8f, 0.8f, 1.0f, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, triangleVertexBuffer);

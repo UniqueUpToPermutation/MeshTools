@@ -75,9 +75,9 @@ namespace GeometryModes
                 var outputFile = args[indx + 1];
 
                 if (bUseSymmetricLaplacian)
-                    DifferentialStructure.WriteSparseMatrix(diff.SymmetrizedLaplacian, outputFile);
+                    DifferentialStructure.WriteSparseMatrix(diff.InteriorSymmetrizedLaplacian, outputFile);
                 else
-                    DifferentialStructure.WriteSparseMatrix(diff.Laplacian, outputFile);
+                    DifferentialStructure.WriteSparseMatrix(diff.InteriorLaplacian, outputFile);
             }
 
             indx = Array.FindIndex(args, t => t == "-modesin");
@@ -90,11 +90,12 @@ namespace GeometryModes
                 var inputFile = args[indx + 1];
                 DifferentialStructure.ReadModeData(inputFile, out modes, out spec);
 
+                var diff = new DifferentialStructure(geo);
                 if (bUseSymmetricLaplacian)
-                {
-                    var diff = new DifferentialStructure(geo);
                     modes = diff.HalfInverseMassMatrix * modes;
-                }
+
+                if (geo.HasBoundary)
+                    modes = diff.InteriorToClosureMap * modes;
 
                 visMode = GeometryVisualMode.ViewModes;
             }
