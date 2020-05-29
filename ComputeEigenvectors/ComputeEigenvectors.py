@@ -28,6 +28,8 @@ if len(sys.argv) < 4:
     mode_count = 20
 else:
     mode_count = int(sys.argv[3])
+
+mode_count = min(mat.shape[0] - 2, mode_count)
     
 # solve this bitch
 print("Computing Eigenvectors...")

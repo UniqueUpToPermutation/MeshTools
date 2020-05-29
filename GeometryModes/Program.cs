@@ -100,6 +100,21 @@ namespace GeometryModes
                 visMode = GeometryVisualMode.ViewModes;
             }
 
+            indx = Array.FindIndex(args, t => t == "-funcin");
+            if (indx != -1)
+            {
+                Console.WriteLine("Reading function data...");
+                var inputFile = args[indx + 1];
+                DifferentialStructure.ReadFunctionData(inputFile, out modes);
+
+                var diff = new DifferentialStructure(geo);
+                if (geo.HasBoundary)
+                    modes = diff.InteriorToClosureMap * modes;
+
+                visMode = GeometryVisualMode.ViewModes;
+                spec = Vec.Build.Dense(modes.RowCount, 0d);
+            }
+
             indx = Array.FindIndex(args, t => t == "-viewmass");
             if (indx != -1)
                 visMode = GeometryVisualMode.ViewDegreeVector;

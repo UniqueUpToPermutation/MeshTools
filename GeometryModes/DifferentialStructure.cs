@@ -343,6 +343,22 @@ namespace GeometryModes
                 for (int i = 0; i < cols; ++i)
                     eigs[i] = data[i];
             }
+
+            public static void ReadFunctionData(string filename, out Mat funcs)
+            {
+                var arrz = np.load(filename);
+
+                var shape = arrz.shape;
+                var rows = shape.Dimensions[0];
+                var cols = shape.Dimensions[1];
+                funcs = Mat.Build.Dense(rows, cols);
+
+                var data = arrz.GetData<double>();
+
+                for (int i = 0; i <= rows; ++i)
+                    for (int j = 0; j < cols; ++j)
+                        funcs[i, j] = data[i * cols + j];
+            }
         }
     }
 }
