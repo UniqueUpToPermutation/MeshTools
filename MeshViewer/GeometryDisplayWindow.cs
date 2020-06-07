@@ -73,7 +73,7 @@ namespace GeoView
         public Mat ObjectModes { get; set; }
         public Vec ObjectEigenvalues { get; set; }
 
-        public GeometryDisplayWindow(Geometry.Geometry geometry) : 
+        public GeometryDisplayWindow(Geometry.Geometry geometry) :
             base(800, 600, new GraphicsMode(32, 24, 8, 8), "Mesh Viewer")
         {
             this.geometry = geometry;
@@ -174,6 +174,11 @@ namespace GeoView
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             GL.Enable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.CullFace);
+            GL.Enable(EnableCap.VertexArray);
+            GL.Enable(EnableCap.IndexArray);
+            GL.CullFace(CullFaceMode.Back);
+
             GL.ClearColor(0.8f, 0.8f, 1.0f, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
