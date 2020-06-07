@@ -74,7 +74,7 @@ namespace GeoView
         public Vec ObjectEigenvalues { get; set; }
 
         public GeometryDisplayWindow(Geometry.Geometry geometry) : 
-            base(800, 600, new GraphicsMode(32, 24, 8, 8), "Geometry Viewer")
+            base(800, 600, new GraphicsMode(32, 24, 8, 8), "Mesh Viewer")
         {
             this.geometry = geometry;
 
