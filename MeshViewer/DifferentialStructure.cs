@@ -110,7 +110,7 @@ namespace GeoView
                             cotBeta = OpenTK.Vector3.Dot(v1, v2) / Math.Abs(OpenTK.Vector3.Cross(v1, v2).Length);
                         }
 
-                        var weight = (cotAlpha + cotAlpha) / 2.0d;
+                        var weight = (cotAlpha + cotBeta) / 2.0d;
                         totalWeight += weight;
 
                         yield return new Tuple<int, int, double>(v.id, e.Head.id, weight);
