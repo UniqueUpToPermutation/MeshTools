@@ -15,9 +15,9 @@ using OpenTK.Input;
 using Mat = MathNet.Numerics.LinearAlgebra.Matrix<double>;
 using Vec = MathNet.Numerics.LinearAlgebra.Vector<double>;
 
-using GeometryModes.Geometry;
+using GeoView.Geometry;
 
-namespace GeometryModes
+namespace GeoView
 {
     class Program
     {
@@ -36,7 +36,12 @@ namespace GeometryModes
             if (Path.GetExtension(objectFile) == ".hfe")
             {
                 // Loading an hfe file
-                geo = Geometry.Geometry.Load(objectFile);
+                geo = Geometry.Geometry.LoadFromBinary(objectFile);
+            }
+            else if (Path.GetExtension(objectFile) == ".json")
+            {
+                // Loading geometry from json
+                geo = Geometry.Geometry.LoadFromJson(objectFile);
             }
             else
             {
@@ -127,7 +132,13 @@ namespace GeometryModes
             if (indx != -1)
             {
                 Console.WriteLine("Saving processed mesh...");
-                geo.Save(args[indx + 1]);
+                var path = args[indx + 1];
+                if (Path.GetExtension(path) == ".hfe")
+                    geo.SaveToBinary(path);
+                else if (Path.GetExtension(path) == ".json")
+                    geo.SaveToJson(path);
+                else
+                    Console.WriteLine("Unrecognized meshout file extension!");
             }
 
             indx = Array.FindIndex(args, t => t == "-noview");

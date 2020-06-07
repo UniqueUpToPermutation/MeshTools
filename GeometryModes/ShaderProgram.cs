@@ -6,7 +6,7 @@ using OpenTK;
 
 using System.IO;
 
-namespace GeometryModes
+namespace GeoView
 {
     public struct ShaderUniform
     {

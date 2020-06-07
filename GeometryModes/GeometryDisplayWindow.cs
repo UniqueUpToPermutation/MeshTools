@@ -15,9 +15,9 @@ using OpenTK.Input;
 using Mat = MathNet.Numerics.LinearAlgebra.Matrix<double>;
 using Vec = MathNet.Numerics.LinearAlgebra.Vector<double>;
 
-using GeometryModes.Geometry;
+using GeoView.Geometry;
 
-namespace GeometryModes
+namespace GeoView
 {
     enum GeometryVisualMode
     {

@@ -11,7 +11,7 @@ using Vec = MathNet.Numerics.LinearAlgebra.Vector<double>;
 using Clr = OpenTK.Graphics.Color4;
 using Assimp;
 
-namespace GeometryModes
+namespace GeoView
 {
     namespace Geometry
     {
@@ -478,7 +478,7 @@ namespace GeometryModes
             public OpenTK.Vector3 Upper;
         }
 
-        public class Geometry
+        public partial class Geometry
         {
             public List<RawEdge> edges = new List<RawEdge>();
             public List<RawFace> faces = new List<RawFace>();
@@ -813,13 +813,13 @@ namespace GeometryModes
                 return From(new AssimpMeshGeometrySource(mesh), bGroupVertices, bMergeVertices, relativeGroupTolerance);
             }
 
-            public void Save(string filename)
+            public void SaveToBinary(string filename)
             {
                 using (var fHandle = new FileStream(filename, FileMode.Create))
-                    Save(fHandle);
+                    SaveToBinary(fHandle);
             }
 
-            public void Save(Stream s)
+            public void SaveToBinary(Stream s)
             {
                 using (var writer = new BinaryWriter(s))
                 {
@@ -891,13 +891,13 @@ namespace GeometryModes
                 }
             }
 
-            public static Geometry Load(string filename)
+            public static Geometry LoadFromBinary(string filename)
             {
                 using (var fHandle = new FileStream(filename, FileMode.Open))
-                    return Load(fHandle);
+                    return LoadFromBinary(fHandle);
             }
 
-            public static Geometry Load(Stream s)
+            public static Geometry LoadFromBinary(Stream s)
             {
                 Geometry geo = new Geometry();
 
@@ -916,8 +916,6 @@ namespace GeometryModes
                     geo.vertices = (from i in Enumerable.Range(0, vertexCount) select new RawVertex()).ToList();
                     geo.edges = (from i in Enumerable.Range(0, edgeCount) select new RawEdge()).ToList();
                     geo.faces = (from i in Enumerable.Range(0, faceCount) select new RawFace()).ToList();
-
-                    var a = new List<Vertex?>();
 
                     if (geo.HasVertices)
                     {

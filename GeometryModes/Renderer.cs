@@ -15,7 +15,7 @@ using OpenTK.Input;
 using Mat = MathNet.Numerics.LinearAlgebra.Matrix<double>;
 using Vec = MathNet.Numerics.LinearAlgebra.Vector<double>;
 
-namespace GeometryModes
+namespace GeoView
 {
     public interface IRenderObject
     {

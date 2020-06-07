@@ -12,7 +12,7 @@ using Clr = OpenTK.Graphics.Color4;
 
 using np = Numpy.np;
 
-namespace GeometryModes
+namespace GeoView
 {
     namespace Geometry
     {
