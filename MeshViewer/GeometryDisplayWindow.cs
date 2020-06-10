@@ -46,6 +46,7 @@ namespace GeoView
         };
 
         int triangleVertexBuffer = -1;
+        int vertexArrayObject = -1;
 
         Geometry.Geometry geometry;
         Camera camera = new Camera();
@@ -74,7 +75,8 @@ namespace GeoView
         public Vec ObjectEigenvalues { get; set; }
 
         public GeometryDisplayWindow(Geometry.Geometry geometry) :
-            base(800, 600, new GraphicsMode(32, 24, 8, 8), "Mesh Viewer")
+            base(800, 600, new GraphicsMode(32, 24, 8, 8), "Mesh Viewer", GameWindowFlags.Default,
+                DisplayDevice.Default, 3, 3, GraphicsContextFlags.ForwardCompatible)
         {
             this.geometry = geometry;
 
@@ -116,6 +118,7 @@ namespace GeoView
                 }
             }
             GenerateModelBuffers();
+            GenerateVertexArray();
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
@@ -155,6 +158,23 @@ namespace GeoView
                 vertData, BufferUsageHint.StaticDraw);
         }
 
+        protected void GenerateVertexArray()
+        {
+            vertexArrayObject = GL.GenVertexArray();
+
+            GL.BindVertexArray(vertexArrayObject);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, triangleVertexBuffer);
+
+            GL.EnableVertexAttribArray(0);
+            GL.EnableVertexAttribArray(1);
+            GL.EnableVertexAttribArray(2);
+            GL.EnableVertexAttribArray(3);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 11 * sizeof(float), 0);
+            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 11 * sizeof(float), 3 * sizeof(float));
+            GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, 11 * sizeof(float), 5 * sizeof(float));
+            GL.VertexAttribPointer(3, 3, VertexAttribPointerType.Float, false, 11 * sizeof(float), 8 * sizeof(float));
+        }
+
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
@@ -182,17 +202,7 @@ namespace GeoView
             GL.ClearColor(0.8f, 0.8f, 1.0f, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            GL.BindBuffer(BufferTarget.ArrayBuffer, triangleVertexBuffer);
-
-            GL.EnableVertexAttribArray(0);
-            GL.EnableVertexAttribArray(1);
-            GL.EnableVertexAttribArray(2);
-            GL.EnableVertexAttribArray(3);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 11 * sizeof(float), 0);
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 11 * sizeof(float), 3 * sizeof(float));
-            GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, 11 * sizeof(float), 5 * sizeof(float));
-            GL.VertexAttribPointer(3, 3, VertexAttribPointerType.Float, false, 11 * sizeof(float), 8 * sizeof(float));
-
+            // Select and configure shader
             var worldMat = Matrix4.Identity;
             var viewMat = camera.ViewMatrix;
             var projMat = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4.0f, ((float)Width) / ((float)Height), 0.1f, 100.0f);
@@ -248,6 +258,8 @@ namespace GeoView
                     break;
             }
 
+            // Draw geometry using vertex array
+            GL.BindVertexArray(vertexArrayObject);
             GL.DrawArrays(PrimType.Triangles, 0, geometry.FaceCount * 3);
 
             SwapBuffers();
