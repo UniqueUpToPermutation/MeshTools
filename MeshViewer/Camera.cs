@@ -98,12 +98,14 @@ namespace GeoView
         protected int lastX;
         protected int lastY;
         protected bool bDoCursorHide = true;
+        protected MouseCursor cursor;
+        protected bool bIsOSX = false;
+
         public CameraController(Camera camera)
         {
             this.camera = camera;
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                bDoCursorHide = false;
+            bIsOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
         }
 
         public void UpdateControl(MouseButtonEventArgs e)
@@ -133,16 +135,21 @@ namespace GeoView
 
             if (bCursorCapture)
             {
-                if (bDoCursorHide)
+                if (!bIsOSX)
                     parent.CursorVisible = false;
+                else
+                    parent.Cursor = MouseCursor.Empty;
+
                 var cameraRotateMouseState = Mouse.GetState();
                 lastX = cameraRotateMouseState.X;
                 lastY = cameraRotateMouseState.Y;
             }
             else
             {
-                if (bDoCursorHide)
+                if (!bIsOSX)
                     parent.CursorVisible = true;
+                else
+                    parent.Cursor = cursor;
             }
         }
 
@@ -195,6 +202,7 @@ namespace GeoView
             window.MouseDown += OnMouseDown;
             window.MouseMove += OnMouseMove;
             parent = window;
+            cursor = parent.Cursor;
         }
 
         public void Unattach(GameWindow window)
@@ -202,6 +210,7 @@ namespace GeoView
             window.MouseUp -= OnMouseUp;
             window.MouseDown -= OnMouseDown;
             window.MouseMove -= OnMouseMove;
+            parent.Cursor = cursor;
         }
     }
 
