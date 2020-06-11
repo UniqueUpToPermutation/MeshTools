@@ -84,41 +84,44 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="bunny.obj">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <EmbeddedResource Include="Shaders\CookTorrance.frag" />
     <EmbeddedResource Include="Shaders\CookTorrance.vert" />
-    <None Include="bunny_high_detail.obj">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="cube.obj">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="drum.obj">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="grid.obj">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="monkey.obj">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
     <EmbeddedResource Include="Shaders\SimpleColor.frag" />
     <EmbeddedResource Include="Shaders\SimpleColor.vert" />
     <EmbeddedResource Include="Shaders\BlinnPhong.frag" />
     <EmbeddedResource Include="Shaders\BlinnPhong.vert" />
-    <None Include="sphere.obj">
+    <None Include="Meshes\bunny.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="torus.obj">
+    <None Include="Meshes\bunny_high_detail.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Meshes\cube.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Meshes\drum.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Meshes\grid.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Meshes\monkey.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Meshes\sphere.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Meshes\torus.obj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Meshes\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\AssimpNet.4.1.0\build\AssimpNet.targets" Condition="Exists('..\packages\AssimpNet.4.1.0\build\AssimpNet.targets')" />

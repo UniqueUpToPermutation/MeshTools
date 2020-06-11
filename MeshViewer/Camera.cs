@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
@@ -91,20 +92,25 @@ namespace GeoView
     class CameraController
     {
         public CameraMoveMode moveMode = CameraMoveMode.None;
-        public MouseState cameraRotateMouseState;
         public Camera camera;
         public GameWindow parent;
 
+        protected int lastX;
+        protected int lastY;
+        protected bool bDoCursorHide = true;
         public CameraController(Camera camera)
         {
             this.camera = camera;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                bDoCursorHide = false;
         }
 
         public void UpdateControl(MouseButtonEventArgs e)
         {
             var state = e.Mouse;
 
-            var bCursorCapture = false;
+            bool bCursorCapture = false;
             if (state.LeftButton == ButtonState.Pressed && state.RightButton == ButtonState.Pressed)
             {
                 moveMode = CameraMoveMode.Dolly;
@@ -127,18 +133,26 @@ namespace GeoView
 
             if (bCursorCapture)
             {
-                parent.CursorVisible = false;
-                cameraRotateMouseState = Mouse.GetCursorState();
+                if (bDoCursorHide)
+                    parent.CursorVisible = false;
+                var cameraRotateMouseState = Mouse.GetState();
+                lastX = cameraRotateMouseState.X;
+                lastY = cameraRotateMouseState.Y;
             }
             else
             {
-                parent.CursorVisible = true;
+                if (bDoCursorHide)
+                    parent.CursorVisible = true;
             }
         }
 
         public void OnMouseDown(object sender, MouseButtonEventArgs e)
         {
-            UpdateControl(e);
+            var mouseState = Mouse.GetCursorState();
+            var clientPos = parent.PointToClient(new System.Drawing.Point(mouseState.X, mouseState.Y));
+            if (parent.ClientRectangle.Contains(clientPos))
+                UpdateControl(e);
+               
         }
 
         public void OnMouseUp(object sender, MouseButtonEventArgs e)
@@ -148,32 +162,31 @@ namespace GeoView
 
         public void OnMouseMove(object sender, MouseMoveEventArgs e)
         {
+            var state = Mouse.GetState();
+
             switch (moveMode)
             {
                 case CameraMoveMode.Rotate:
-                    var state = Mouse.GetCursorState();
-                    var dx = state.X - cameraRotateMouseState.X;
-                    var dy = state.Y - cameraRotateMouseState.Y;
+                    var dx = state.X - lastX;
+                    var dy = state.Y - lastY;
                     var dt = 1.0f;
                     camera.Rotate(dx, dy, dt);
-                    Mouse.SetPosition(cameraRotateMouseState.X, cameraRotateMouseState.Y);
                     break;
                 case CameraMoveMode.Dolly:
-                    state = Mouse.GetCursorState();
-                    dy = state.Y - cameraRotateMouseState.Y;
+                    dy = state.Y - lastY;
                     dt = 1.0f;
                     camera.Dolly(dy, dt);
-                    Mouse.SetPosition(cameraRotateMouseState.X, cameraRotateMouseState.Y);
                     break;
                 case CameraMoveMode.Pan:
-                    state = Mouse.GetCursorState();
-                    dx = state.X - cameraRotateMouseState.X;
-                    dy = state.Y - cameraRotateMouseState.Y;
+                    dx = state.X - lastX;
+                    dy = state.Y - lastY;
                     dt = 1.0f;
                     camera.Pan(dx, dy, dt);
-                    Mouse.SetPosition(cameraRotateMouseState.X, cameraRotateMouseState.Y);
                     break;
             }
+
+            lastX = state.X;
+            lastY = state.Y;
         }
 
         public void Attach(GameWindow window)

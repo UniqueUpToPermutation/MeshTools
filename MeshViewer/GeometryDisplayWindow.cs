@@ -126,6 +126,9 @@ namespace GeoView
             if (e.Key == Key.Escape)
                 Exit();
 
+            if (e.Key == Key.Space)
+                camera.theta += 1f;
+
             if (ObjectModes != null)
             {
                 if (e.Key == Key.Plus)
